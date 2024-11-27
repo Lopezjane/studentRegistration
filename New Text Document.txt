@@ -1,0 +1,2 @@
+this app can capture image, save to database
+and display the information with error trapping.

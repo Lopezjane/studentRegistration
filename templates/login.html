@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+	<div class="w3-card-4 w3-animate-top w3-container w3-padding" style="width:50%;margin:auto">
+		<form action="/userlogin" method="post">  <!-- Fixed 'methods' to 'method' -->
+			<p>
+				<label>USERNAME</label>
+				<input type="text" name="username" class="w3-input w3-border">
+			</p>
+			<p>
+				<label>PASSWORD</label>
+				<input type="password" name="password" class="w3-input w3-border">
+			</p>
+			<p>
+				<input type="submit" value="LOGIN" class="w3-button w3-blue w3-right">
+			</p>
+		</form>
+	</div>
+{% endblock %}

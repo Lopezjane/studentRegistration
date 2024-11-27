@@ -1,0 +1,332 @@
+{% extends 'base.html' %} 
+{% block content %}
+
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+	<div class="w3-container flash-message" id="flash-messages">
+		{% for category, message in messages %}
+			<div class="w3-panel w3-{{ 'green' if category == 'success' else 'red' }} w3-display-container">
+				<p>{{ message }}</p>
+			</div>
+		{% endfor %}
+	</div>
+{% endif %}
+{% endwith %}
+
+	<div class="w3-container w3-padding">
+		<table class="w3-table-all">
+			<tr>
+				<th>IDNO</th>
+				<th class="w3-hide-small">LASTNAME</th>
+				<th class="w3-hide-small">FIRSTNAME</th>
+				<th class="w3-hide-large w3-hide-medium">NAME</th>
+				<th>COURSE</th>
+				<th>LEVEL</th>
+				<th>ACTION</th>
+			</tr>
+			{% for student in data %}
+			<tr>
+				<td onclick="loadStudentData('{{ student['idno'] }}')" style="cursor: pointer; text-decoration: underline; color: blue;">{{ student["idno"] }}</td>
+				<td class="w3-hide-small">{{ student["lastname"] }}</td>
+				<td class="w3-hide-small">{{ student["firstname"] }}</td>
+				<td class="w3-hide-large w3-hide-medium">{{ student["lastname"] }}, {{ student["firstname"] }}</td>
+				<td>{{ student["course"] }}</td>
+				<td>{{ student["level"] }}</td>
+				<td>
+					<button onclick="confirmDelete('{{ student["idno"] }}')" class="w3-button w3-red">&times;</button>
+				</td>
+			</tr>
+			{% endfor %}
+		</table>
+
+		<!-- Delete Confirmation Modal -->
+		<div id="deleteModal" class="w3-modal" style="display: none;">
+			<div class="w3-modal-content w3-animate-top w3-card-4">
+				<header class="w3-container w3-red">
+					<span onclick="document.getElementById('deleteModal').style.display='none'" class="w3-button w3-display-topright">&times;</span>
+					<h3>Confirm Deletion</h3>
+				</header>
+				<div class="w3-container">
+					<p>Are you sure you want to delete this student?</p>
+				</div>
+				<footer class="w3-container">
+					<button onclick="cancelDelete()" class="w3-button w3-gray">Cancel</button>
+					<a href="#" id="confirmDeleteLink" class="w3-button w3-red">Confirm</a>
+				</footer>
+			</div>
+		</div>
+
+<!-- Add Student Modal -->
+<div class="w3-modal" id="addStudentModal">
+	<div class="w3-modal-content w3-animate-top">
+		<div class="w3-container">
+			<span class="w3-button w3-display-topright" onclick="document.getElementById('addStudentModal').style.display='none'">&times;</span>
+		</div>
+		<div class="w3-container w3-padding">
+			<form id="studentForm" action="/savestudent" method="post" enctype="multipart/form-data">
+				<div id="my_camera" style="width:320px; height:240px; margin:auto"></div>
+				<p>
+					<label>IDNO</label>
+					<input type="text" id="idno" name="idno" class="w3-input" required>
+				</p>
+				<p>
+					<label>LASTNAME</label>
+					<input type="text" id="lastname" name="lastname" class="w3-input" required>
+				</p>
+				<p>
+					<label>FIRSTNAME</label>
+					<input type="text" id="firstname" name="firstname" class="w3-input" required>
+				</p>
+				<p>
+					<label>COURSE</label>
+					<select id="course" name="course" class="w3-select" required>
+						<option value="" disabled selected>Choose a course</option>
+						<option value="BSIT">BSIT</option>
+						<option value="BSHM">BSHM</option>
+						<option value="BSCE">BSCE</option>
+						<option value="BSCRIM">BSCRIM</option>
+
+					</select>
+				</p>
+				<p>
+					<label>LEVEL</label>
+					<select id="level" name="level" class="w3-select" required>
+						<option value="" disabled selected>Choose a level</option>
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3">3</option>
+						<option value="4">4</option>
+						<option value="5">5</option>
+					</select>
+				</p>
+				<input type="hidden" id="imagePrev" name="imagePrev"> 
+				<input type="hidden" id="editFlag" name="editFlag" value="false"> 
+				<p>
+					<input type="file" id="my_result" name="imagePrev" style="display: none;">
+					<button class="w3-button w3-blue" type="button" onclick="save_information()">Submit</button>
+					<button type="button" class="w3-button w3-red" onclick="cancelEdit()">Cancel</button>
+				</p>
+			</form>
+		</div>
+	</div>
+</div>
+</div>
+
+
+<!-- View/Edit Student Modal -->
+<div id="viewEditStudentModal" class="w3-modal" style="display: none;">
+    <div class="w3-modal-content w3-animate-top">
+        <div class="w3-container">
+            <span onclick="document.getElementById('viewEditStudentModal').style.display='none'" class="w3-button w3-display-topright">&times;</span>
+        </div>
+        <div class="w3-container w3-padding">
+			<img id="view_imagePrev" name="imagePrev" style="display:none;" alt="Student Image">
+            <form id="viewEditForm" action="/savestudent" method="post">
+                <p>
+                    <label>IDNO</label>
+                    <input type="text" id="view_idno" name="idno" class="w3-input" readonly>
+                </p>
+                <p>
+                    <label>LASTNAME</label>
+                    <input type="text" id="view_lastname" name="lastname" class="w3-input" readonly>
+                </p>
+                <p>
+                    <label>FIRSTNAME</label>
+                    <input type="text" id="view_firstname" name="firstname" class="w3-input" readonly>
+                </p>
+                <p>
+                    <label>COURSE</label>
+                    <input type="text" id="view_course" name="course" class="w3-input" readonly>
+                </p>
+                <p>
+                    <label>LEVEL</label>
+                    <input type="text" id="view_level" name="level" class="w3-input" readonly>
+                </p>
+
+                <div>
+                    <button type="button" onclick="enableEditing()" class="w3-button w3-blue">Edit</button>
+                    <button type="button" onclick="document.getElementById('viewEditStudentModal').style.display='none'" class="w3-button w3-red">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script src="{{ url_for('static', filename='js/webcam.min.js') }}"></script>
+
+<script language="JavaScript">
+
+		Webcam.set({
+			width: 320,  
+			height: 240, 
+			dest_width: 320,  
+			dest_height: 240, 
+			image_format: 'png',
+			jpeg_quality: 90,
+			force_flash: false,
+			flip_horiz: true,
+			fps: 45
+		});
+		Webcam.attach('#my_camera');
+		
+	
+		function save_information() {
+			var idno = document.getElementById('idno').value;
+			var lastname = document.getElementById('lastname').value;
+			var firstname = document.getElementById('firstname').value;
+			var course = document.getElementById('course').value;
+			var level = document.getElementById('level').value;
+			var editFlag = document.getElementById('editFlag').value;
+
+			if (!idno || !lastname || !firstname || !course || !level) {
+				alert("Please fill in all fields.");
+				return;
+			}
+
+			Webcam.snap(function(data_uri) {
+				fetch(data_uri)
+					.then(res => res.blob())
+					.then(blob => {
+						const file = new File([blob], `${idno}.png`, { type: "image/png" });
+						var formData = new FormData();
+						formData.append('idno', idno);
+						formData.append('lastname', lastname);
+						formData.append('firstname', firstname);
+						formData.append('course', course);
+						formData.append('level', level);
+						formData.append('imagePrev', file);
+						formData.append('editFlag', editFlag);
+
+						fetch('/savestudent', {
+							method: 'POST',
+							body: formData
+						})
+						.then(response => response.json())
+						.then(data => {
+							alert(editFlag === 'true' ? "Student Updated Successfully" : "New Student Added");
+							window.location.href = "/studentlist";
+						})
+						.catch(error => {
+							console.error("Error:", error);
+							alert("Error submitting the form.");
+						});
+					});
+			});
+		}
+
+
+		function loadStudentData(idno) {
+			fetch(`/getStudentData?idno=${idno}`)
+				.then(response => {
+					if (!response.ok) {
+						throw new Error('Network response was not ok');
+					}
+					return response.json();
+				})
+				.then(student => {
+					// Set the data from the response to the modal fields
+					document.getElementById('view_idno').value = student.idno;
+					document.getElementById('view_lastname').value = student.lastname;
+					document.getElementById('view_firstname').value = student.firstname;
+					document.getElementById('view_course').value = student.course;
+					document.getElementById('view_level').value = student.level;
+					document.getElementById('view_imagePrev').src = '/' + student.image; 
+					document.getElementById('view_imagePrev').style.display = 'flex';
+
+					document.getElementById('viewEditStudentModal').style.display = 'block';
+				})
+				.catch(error => {
+					console.error('Error fetching student data:', error);
+					alert("Failed to load student data.");
+				});
+		}
+
+		function enableEditing() {
+			const idno = document.getElementById('view_idno') ? document.getElementById('view_idno').value : '';
+			const lastname = document.getElementById('view_lastname') ? document.getElementById('view_lastname').value : '';
+			const firstname = document.getElementById('view_firstname') ? document.getElementById('view_firstname').value : '';
+			const course = document.getElementById('view_course') ? document.getElementById('view_course').value : '';
+			const level = document.getElementById('view_level') ? document.getElementById('view_level').value : '';
+			document.getElementById('view_imagePrev').style.display = 'none'; 
+			document.getElementById('my_camera').style.display = 'block';  
+			document.getElementById('idno').value = idno;
+			document.getElementById('lastname').value = lastname;
+			document.getElementById('firstname').value = firstname;
+			document.getElementById('course').value = course;
+			document.getElementById('level').value = level;
+			document.getElementById('editFlag').value = 'true'; 
+			document.getElementById('viewEditStudentModal').style.display = 'none';
+			document.getElementById('addStudentModal').style.display = 'flex';
+			document.getElementById('idno').readOnly = true; 
+		}
+
+		function cancelEdit() {
+			document.getElementById('idno').value = '';
+			document.getElementById('lastname').value = '';
+			document.getElementById('firstname').value = '';
+			document.getElementById('course').value = '';
+			document.getElementById('level').value = '';
+			document.getElementById('editFlag').value = 'false'; 
+			document.getElementById('idno').readOnly = false;
+			document.getElementById('viewEditStudentModal').style.display = 'none';
+			document.getElementById('addStudentModal').style.display = 'none';
+			console.log('Edit canceled, now adding a new student.');
+
+		}
+
+
+		function loader(idno, lastname, firstname, course, level) {
+			document.getElementById('studentmodal').style.display = 'block';
+			document.getElementById('idno').value = idno;
+			document.getElementById('lastname').value = lastname;
+			document.getElementById('firstname').value = firstname;
+			document.getElementById('course').value = course;
+			document.getElementById('level').value = level;
+		}
+
+		function confirmDelete(idno) {
+			document.getElementById('deleteModal').style.display = 'block';
+			document.getElementById('confirmDeleteLink').href = '/deletestudent?idno=' + idno;
+		}
+
+		function cancelDelete() {
+			document.getElementById('deleteModal').style.display = 'none';
+		}
+		
+    // Function to open the modal for adding a new student
+		function openAddStudentModal() {
+			document.getElementById('studentmodal').style.display = 'block';
+			document.getElementById('modalTitle').innerText = "Add New Student";  // Update the title
+			// Clear the form for adding a new student
+			document.getElementById('studentForm').reset();
+			document.getElementById('idno').removeAttribute("readonly");
+		}
+
+		// Function to close the modal
+		function closeModal() {
+			document.getElementById('studentmodal').style.display = 'none';
+		}
+		
+		function clear_view() {
+        document.getElementById('name').value = "";
+        document.getElementById('my_result').innerHTML = "";
+		}
+
+		window.addEventListener('DOMContentLoaded', (event) => {
+        const flashMessages = document.querySelectorAll('.flash-message');
+        
+        flashMessages.forEach((flashMessage) => {
+            setTimeout(() => {
+                flashMessage.classList.add('fade-out');
+            }, 2500);
+
+            flashMessage.addEventListener('animationend', () => {
+                flashMessage.remove();
+            });
+        });
+    });
+
+</script>
+{% endblock %}
