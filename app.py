@@ -1,11 +1,9 @@
 from flask import Flask, render_template, request, redirect, session, flash, jsonify
-from flask_session import Session
 from dbhelper import *
 
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
-Session(app)
 
 uploadfolder = 'static/img'
 app.secret_key = '!@#$%^'
